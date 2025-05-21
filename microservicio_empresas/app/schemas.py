@@ -12,3 +12,21 @@ class Empresa(EmpresaBase):
 
     class Config:
         orm_mode = True
+
+class UsuarioBase(BaseModel):
+    correo: str
+    contraseña: str
+    nombre: str
+    rol: str = 'usuario'
+
+class UsuarioCreate(UsuarioBase):
+    pass
+
+class Usuario(UsuarioBase):
+    id_usuario: int
+    class Config:
+        orm_mode = True
+
+class LoginRequest(BaseModel):
+    correo: str
+    contraseña: str

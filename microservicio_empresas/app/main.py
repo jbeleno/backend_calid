@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from .database import engine, SessionLocal
@@ -60,3 +60,40 @@ def delete_empresa(empresa_id: int, db: Session = Depends(get_db)):
     if db_empresa is None:
         raise HTTPException(status_code=404, detail="Empresa no encontrada")
     return db_empresa
+
+# CRUD Usuarios
+@app.post("/usuarios/", response_model=schemas.Usuario, tags=["usuarios"])
+def create_usuario(usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+    return crud.create_usuario(db, usuario)
+
+@app.get("/usuarios/", response_model=list[schemas.Usuario], tags=["usuarios"])
+def read_usuarios(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+    return crud.get_usuarios(db, skip=skip, limit=limit)
+
+@app.get("/usuarios/{usuario_id}", response_model=schemas.Usuario, tags=["usuarios"])
+def read_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    db_usuario = crud.get_usuario(db, usuario_id=usuario_id)
+    if db_usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return db_usuario
+
+@app.put("/usuarios/{usuario_id}", response_model=schemas.Usuario, tags=["usuarios"])
+def update_usuario(usuario_id: int, usuario: schemas.UsuarioCreate, db: Session = Depends(get_db)):
+    db_usuario = crud.update_usuario(db, usuario_id, usuario)
+    if db_usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return db_usuario
+
+@app.delete("/usuarios/{usuario_id}", response_model=schemas.Usuario, tags=["usuarios"])
+def delete_usuario(usuario_id: int, db: Session = Depends(get_db)):
+    db_usuario = crud.delete_usuario(db, usuario_id)
+    if db_usuario is None:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    return db_usuario
+
+@app.post("/login", response_model=schemas.Usuario, tags=["usuarios"])
+def login(request: schemas.LoginRequest, db: Session = Depends(get_db)):
+    usuario = crud.autenticar_usuario(db, request.correo, request.contraseña)
+    if not usuario:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Correo o contraseña incorrectos")
+    return usuario
